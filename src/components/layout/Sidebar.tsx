@@ -90,12 +90,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/80 bg-slate-950/40">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md font-extrabold text-lg tracking-wider">
-              BL
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md font-extrabold text-base tracking-wider">
+              MLB
             </div>
             <div>
               <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
-                BizLedger
+                MyLedgerBox
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
                   NGN
                 </span>

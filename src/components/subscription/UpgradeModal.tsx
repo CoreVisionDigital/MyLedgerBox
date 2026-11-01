@@ -78,7 +78,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Upgrade Your BizLedger Plan"
+      title="Upgrade Your MyLedgerBox Plan"
       description="Unlock unlimited invoicing, receipt issuance, advanced reports, and team collaboration."
       maxWidth="2xl"
     >

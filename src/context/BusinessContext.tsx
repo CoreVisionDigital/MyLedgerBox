@@ -485,7 +485,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       action,
       description,
       userId: user.uid,
-      userName: user.displayName || user.email || 'BizLedger User',
+      userName: user.displayName || user.email || 'MyLedgerBox User',
       timestamp: new Date().toISOString(),
     };
 
@@ -2153,7 +2153,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         paymentMethod: 'bank_transfer',
         paymentDate: '2026-10-20',
         issuedAt: '2026-10-20T15:05:00Z',
-        notes: 'Official electronic receipt issued by BizLedger',
+        notes: 'Official electronic receipt issued by MyLedgerBox',
       },
     ];
 

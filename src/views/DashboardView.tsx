@@ -175,7 +175,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <div>
           <span className="font-bold">Financial Accounting Principle: </span>
-          BizLedger strictly distinguishes invoiced commercial sales (accrual basis) from actual cash payments received in Nigerian bank accounts. Estimated profit is an operational management figure and does not replace statutory audited annual financial returns under Nigerian CAMA 2020.
+          MyLedgerBox strictly distinguishes invoiced commercial sales (accrual basis) from actual cash payments received in Nigerian bank accounts. Estimated profit is an operational management figure and does not replace statutory audited annual financial returns under Nigerian CAMA 2020.
         </div>
       </div>
 

@@ -405,7 +405,7 @@ export const SubscriptionView: React.FC = () => {
           <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60">
             <h4 className="font-bold text-white mb-1">3. 7-Day Money-Back Guarantee</h4>
             <p className="leading-relaxed">
-              If BizLedger does not suit your business workflow within 7 days of your first payment, contact support for a prompt refund.
+              If MyLedgerBox does not suit your business workflow within 7 days of your first payment, contact support for a prompt refund.
             </p>
           </div>
         </div>

@@ -46,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 leading-tight">
-              {activeBusiness?.name || 'BizLedger'}
+              {activeBusiness?.name || 'MyLedgerBox'}
             </h2>
             <div className="flex items-center gap-2 text-[11px] text-slate-500">
               <span className="flex items-center gap-1 text-emerald-600 font-medium">
@@ -138,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={logout}
-            title="Sign out of BizLedger"
+            title="Sign out of MyLedgerBox"
             className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-colors"
           >
             <LogOut className="w-4 h-4" />

@@ -1,7 +1,7 @@
-# Security Policy - BizLedger
+# Security Policy - MyLedgerBox
 
 ## Overview
-BizLedger is designed with financial compliance, strict tenant data isolation, and robust Attribute-Based Access Control (ABAC) in Google Cloud Firestore.
+MyLedgerBox is designed with financial compliance, strict tenant data isolation, and robust Attribute-Based Access Control (ABAC) in Google Cloud Firestore.
 
 ## Supported Versions
 
@@ -17,7 +17,7 @@ BizLedger is designed with financial compliance, strict tenant data isolation, a
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability or logic leak in BizLedger:
+If you discover a security vulnerability or logic leak in MyLedgerBox:
 1. Please email **mode.bproduction@gmail.com** with details of the vulnerability, reproduction steps, and potential impact.
 2. Please do not report security vulnerabilities through public GitHub issues.
 3. You will receive an acknowledgment within 24-48 hours. Valid reports will be prioritized and resolved promptly.

@@ -297,7 +297,7 @@ export const ManageSubscriberModal: React.FC<ManageSubscriberModalProps> = ({
             className="text-xs"
           />
           <p className="text-[10px] text-slate-500 mt-1">
-            This action will be permanently recorded in the BizLedger audit trail by <span className="font-semibold text-slate-700">{SUPER_ADMIN_EMAIL}</span>.
+            This action will be permanently recorded in the MyLedgerBox audit trail by <span className="font-semibold text-slate-700">{SUPER_ADMIN_EMAIL}</span>.
           </p>
         </div>
 

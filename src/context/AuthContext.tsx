@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       await signInWithPopup(auth, googleProvider);
-      success('Logged In', 'Welcome back to BizLedger!');
+      success('Logged In', 'Welcome back to MyLedgerBox!');
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
       if (err.code === 'auth/unauthorized-domain') {
@@ -125,7 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setDemoUser(userProfile);
         localStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
-        success('Signed In Successfully', `Welcome to BizLedger, ${userProfile.displayName}!`);
+        success('Signed In Successfully', `Welcome to MyLedgerBox, ${userProfile.displayName}!`);
         return;
       }
 
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       await createUserWithEmailAndPassword(auth, email, pass);
-      success('Account Created', `Welcome to BizLedger, ${name}!`);
+      success('Account Created', `Welcome to MyLedgerBox, ${name}!`);
     } catch (err: any) {
       console.error('Registration Error:', err);
       // Fallback for domains or projects where email/password registration is not enabled in Firebase
@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setDemoUser(userProfile);
         localStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
-        success('Account Created', `Welcome to BizLedger, ${userProfile.displayName}!`);
+        success('Account Created', `Welcome to MyLedgerBox, ${userProfile.displayName}!`);
         return;
       }
       error('Registration Failed', err.message || 'Could not create account.');
@@ -228,7 +228,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ? {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || (checkIsSuperAdmin(firebaseUser.email) ? 'Super Admin (Account Owner)' : firebaseUser.email?.split('@')[0]) || 'BizLedger User',
+        displayName: firebaseUser.displayName || (checkIsSuperAdmin(firebaseUser.email) ? 'Super Admin (Account Owner)' : firebaseUser.email?.split('@')[0]) || 'MyLedgerBox User',
         photoURL: firebaseUser.photoURL,
         isDemoUser: false,
         isSuperAdmin: checkIsSuperAdmin(firebaseUser.email),

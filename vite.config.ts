@@ -40,7 +40,7 @@ export default defineConfig(() => {
     ],
     build: {
       target: 'es2015',
-      minify: 'terser',
+      minify: 'terser' as const,
       cssTarget: 'chrome61',
     },
     resolve: {

@@ -1,5 +1,5 @@
 /**
- * BizLedger Strict Minor-Units (Kobo) Financial Mathematics Utility
+ * MyLedgerBox Strict Minor-Units (Kobo) Financial Mathematics Utility
  * 
  * In Nigerian financial management and banking, 1 Naira (NGN) = 100 Kobo.
  * All monetary values are strictly represented and stored as whole integer kobo (minor units).

@@ -52,12 +52,12 @@ export const AuthView: React.FC = () => {
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-900 selection:bg-emerald-500 selection:text-white">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
         {/* Brand Logo */}
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-xl shadow-emerald-950 font-black text-2xl tracking-wider mb-4 border border-emerald-400/30">
-          BL
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-xl shadow-emerald-950 font-black text-xl tracking-wider mb-4 border border-emerald-400/30">
+          MLB
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          BizLedger
+          MyLedgerBox
         </h2>
         <p className="mt-1.5 text-xs sm:text-sm text-slate-400">
           Nigerian-First Financial Management & Compliant Ledger SaaS
@@ -159,7 +159,7 @@ export const AuthView: React.FC = () => {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              {mode === 'login' && 'Sign In to BizLedger'}
+              {mode === 'login' && 'Sign In to MyLedgerBox'}
               {mode === 'register' && 'Create Business Account'}
               {mode === 'forgot' && 'Send Reset Email'}
             </Button>
