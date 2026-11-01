@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import legacy from '@vitejs/plugin-legacy';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import path from 'path';
@@ -12,6 +13,9 @@ export default defineConfig(() => {
     plugins: [
       react(), 
       tailwindcss(),
+      legacy({
+        targets: ['defaults', 'not IE 11'],
+      }),
       {
         name: 'github-pages-helper',
         closeBundle() {
@@ -34,6 +38,11 @@ export default defineConfig(() => {
         },
       },
     ],
+    build: {
+      target: 'es2015',
+      minify: 'terser',
+      cssTarget: 'chrome61',
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('.', import.meta.url)),
