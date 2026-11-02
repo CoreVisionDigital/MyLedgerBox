@@ -46,6 +46,7 @@ import {
   checkInvoiceQuota,
   checkCustomerQuota
 } from '../lib/subscriptions';
+import { safeStorage } from '../lib/storage';
 
 interface BusinessContextType {
   activeBusiness: Business | null;
@@ -528,7 +529,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         let allPlatformSubs: Business[] = [];
 
         // Check local storage first for subscribers
-        const cachedSubscribers = localStorage.getItem('bizledger_all_platform_subscribers');
+        const cachedSubscribers = safeStorage.getItem('bizledger_all_platform_subscribers');
         if (cachedSubscribers) {
           try {
             allPlatformSubs = JSON.parse(cachedSubscribers);
@@ -538,7 +539,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
 
         // Check local storage for user businesses
-        const cachedBizList = localStorage.getItem(`bizledger_user_biz_${user.uid}`);
+        const cachedBizList = safeStorage.getItem(`bizledger_user_biz_${user.uid}`);
         if (cachedBizList) {
           try {
             userBizList = JSON.parse(cachedBizList);
@@ -575,7 +576,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         // If Super Admin has no platform subscribers yet, initialize with rich Nigerian sample
         if (allPlatformSubs.length === 0) {
           allPlatformSubs = getSamplePlatformSubscribers();
-          localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(allPlatformSubs));
+          safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(allPlatformSubs));
         }
 
         // If user is super admin, their business list includes all platform subscribers
@@ -584,7 +585,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         } else if (userBizList.length === 0) {
           const defaultBiz = createDefaultNigerianBusiness(user.uid, user.email || undefined);
           userBizList = [defaultBiz];
-          localStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(userBizList));
+          safeStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(userBizList));
           
           if (!user.isDemoUser) {
             try {
@@ -610,7 +611,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (isMounted) {
           setAllSubscribers(allPlatformSubs);
           setAllBusinesses(userBizList);
-          const activeId = localStorage.getItem(`bizledger_active_biz_id_${user.uid}`);
+          const activeId = safeStorage.getItem(`bizledger_active_biz_id_${user.uid}`);
           const found = userBizList.find(b => b.id === activeId) || userBizList[0];
           setActiveBusiness(found);
         }
@@ -636,7 +637,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Load from local storage cache for immediate reactivity
     const loadCache = (key: string, setter: (val: any) => void) => {
-      const cached = localStorage.getItem(getStorageKey(key, bizId));
+      const cached = safeStorage.getItem(getStorageKey(key, bizId));
       if (cached) {
         try {
           setter(JSON.parse(cached));
@@ -671,7 +672,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             snapshot => {
               const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
               setter(items);
-              localStorage.setItem(getStorageKey(colName, bizId), JSON.stringify(items));
+              safeStorage.setItem(getStorageKey(colName, bizId), JSON.stringify(items));
             },
             err => {
               console.warn(`Firestore listener notice for ${colName}:`, err.message);
@@ -703,49 +704,49 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('customers', bizId), JSON.stringify(customers));
+    safeStorage.setItem(getStorageKey('customers', bizId), JSON.stringify(customers));
   }, [customers, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('products', bizId), JSON.stringify(products));
+    safeStorage.setItem(getStorageKey('products', bizId), JSON.stringify(products));
   }, [products, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('invoices', bizId), JSON.stringify(invoices));
+    safeStorage.setItem(getStorageKey('invoices', bizId), JSON.stringify(invoices));
   }, [invoices, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('quotations', bizId), JSON.stringify(quotations));
+    safeStorage.setItem(getStorageKey('quotations', bizId), JSON.stringify(quotations));
   }, [quotations, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('payments', bizId), JSON.stringify(payments));
+    safeStorage.setItem(getStorageKey('payments', bizId), JSON.stringify(payments));
   }, [payments, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('receipts', bizId), JSON.stringify(receipts));
+    safeStorage.setItem(getStorageKey('receipts', bizId), JSON.stringify(receipts));
   }, [receipts, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('expenses', bizId), JSON.stringify(expenses));
+    safeStorage.setItem(getStorageKey('expenses', bizId), JSON.stringify(expenses));
   }, [expenses, activeBusiness]);
 
   useEffect(() => {
     if (!activeBusiness) return;
     const bizId = activeBusiness.id;
-    localStorage.setItem(getStorageKey('auditLogs', bizId), JSON.stringify(auditLogs));
+    safeStorage.setItem(getStorageKey('auditLogs', bizId), JSON.stringify(auditLogs));
   }, [auditLogs, activeBusiness]);
 
   const switchBusiness = (businessId: string) => {
@@ -753,7 +754,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (target) {
       setActiveBusiness(target);
       if (user) {
-        localStorage.setItem(`bizledger_active_biz_id_${user.uid}`, target.id);
+        safeStorage.setItem(`bizledger_active_biz_id_${user.uid}`, target.id);
       }
       info('Business Switched', `Now managing ${target.name}`);
     }
@@ -793,8 +794,8 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     const updatedList = [...allBusinesses, newBiz];
     setAllBusinesses(updatedList);
     setActiveBusiness(newBiz);
-    localStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(updatedList));
-    localStorage.setItem(`bizledger_active_biz_id_${user.uid}`, newBiz.id);
+    safeStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(updatedList));
+    safeStorage.setItem(`bizledger_active_biz_id_${user.uid}`, newBiz.id);
 
     if (!user.isDemoUser) {
       try {
@@ -831,7 +832,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     const updatedList = allBusinesses.map(b => b.id === id ? updated : b);
     setAllBusinesses(updatedList);
     if (user) {
-      localStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(updatedList));
+      safeStorage.setItem(`bizledger_user_biz_${user.uid}`, JSON.stringify(updatedList));
     }
 
     if (!user?.isDemoUser) {
@@ -964,7 +965,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setAllSubscribers(prev => {
       const next = prev.map(b => (b.id === businessId ? { ...b, subscription: updatedSub, updatedAt: now.toISOString() } : b));
-      localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
+      safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
       return next;
     });
 
@@ -1015,7 +1016,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setAllSubscribers(prev => {
       const next = prev.map(b => (b.id === businessId ? { ...b, subscription: updatedSub } : b));
-      localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
+      safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
       return next;
     });
 
@@ -1087,7 +1088,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setAllSubscribers(prev => {
       const next = [newBiz, ...prev];
-      localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
+      safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
       return next;
     });
 
@@ -1109,7 +1110,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const deleteSubscriberBusiness = async (businessId: string) => {
     setAllSubscribers(prev => {
       const next = prev.filter(b => b.id !== businessId);
-      localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
+      safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(next));
       return next;
     });
     setAllBusinesses(prev => prev.filter(b => b.id !== businessId));
@@ -1136,18 +1137,18 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         const fetched = snap.docs.map(d => ({ ...d.data(), id: d.id } as Business));
         if (fetched.length > 0) {
           setAllSubscribers(fetched);
-          localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(fetched));
+          safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(fetched));
           success('Subscribers Synchronized', `Fetched ${fetched.length} tenants from Firestore.`);
           return;
         }
       }
-      const cached = localStorage.getItem('bizledger_all_platform_subscribers');
+      const cached = safeStorage.getItem('bizledger_all_platform_subscribers');
       if (cached) {
         setAllSubscribers(JSON.parse(cached));
       } else {
         const sample = getSamplePlatformSubscribers();
         setAllSubscribers(sample);
-        localStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(sample));
+        safeStorage.setItem('bizledger_all_platform_subscribers', JSON.stringify(sample));
       }
       success('Subscribers Updated', 'Refreshed local subscriber records.');
     } catch (e: any) {

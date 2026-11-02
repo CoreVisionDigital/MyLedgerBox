@@ -28,6 +28,7 @@ import { PaymentModal } from './components/payments/PaymentModal';
 import { ExpenseModal } from './components/expenses/ExpenseModal';
 import { BusinessSettingsModal } from './components/settings/BusinessSettingsModal';
 import { AutomatedTestRunnerModal } from './components/tests/AutomatedTestRunnerModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
 function AuthenticatedApp() {
@@ -219,12 +220,14 @@ function AuthenticatedApp() {
 
 export default function App() {
   return (
-    <NotificationProvider>
-      <AuthProvider>
-        <BusinessProvider>
-          <AuthenticatedApp />
-        </BusinessProvider>
-      </AuthProvider>
-    </NotificationProvider>
+    <ErrorBoundary>
+      <NotificationProvider>
+        <AuthProvider>
+          <BusinessProvider>
+            <AuthenticatedApp />
+          </BusinessProvider>
+        </AuthProvider>
+      </NotificationProvider>
+    </ErrorBoundary>
   );
 }

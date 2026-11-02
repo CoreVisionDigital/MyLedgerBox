@@ -3,18 +3,30 @@
   <head>
     <script>
       (function() {
-        // 1. Suppress unhandled exceptions originating from third-party browser extensions (such as Urban VPN chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon)
-        var isExtensionError = function(msg, src) {
-          return (
-            (typeof src === 'string' && src.indexOf('chrome-extension://') !== -1) ||
-            (typeof msg === 'string' && msg.indexOf('Cannot set property fetch') !== -1)
-          );
+        // Suppress unhandled exceptions originating from 3rd-party browser extensions or tracking blockers
+        var isExtensionOrExternalError = function(msg, src) {
+          if (typeof src === 'string' && (
+            src.indexOf('chrome-extension://') !== -1 ||
+            src.indexOf('moz-extension://') !== -1 ||
+            src.indexOf('safari-extension://') !== -1 ||
+            src.indexOf('extension://') !== -1
+          )) {
+            return true;
+          }
+          if (typeof msg === 'string' && (
+            msg.indexOf('Cannot set property fetch') !== -1 ||
+            msg.indexOf('ResizeObserver loop') !== -1 ||
+            msg.indexOf('Script error') !== -1
+          )) {
+            return true;
+          }
+          return false;
         };
 
         window.addEventListener('error', function(event) {
           if (
-            isExtensionError(event.message, event.filename) ||
-            (event.error && isExtensionError(event.error.message, event.filename))
+            isExtensionOrExternalError(event.message, event.filename) ||
+            (event.error && isExtensionOrExternalError(event.error.message, event.filename))
           ) {
             event.preventDefault();
             event.stopImmediatePropagation();
@@ -22,66 +34,33 @@
           }
         }, true);
 
-        var prevOnError = window.onerror;
-        window.onerror = function(msg, url, line, col, err) {
-          if (isExtensionError(msg, url) || (err && isExtensionError(err.message, url))) {
-            return true;
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event.reason;
+          var msg = reason ? (reason.message || String(reason)) : '';
+          if (isExtensionOrExternalError(msg, '')) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
           }
-          if (typeof prevOnError === 'function') {
-            return prevOnError.apply(this, arguments);
-          }
-        };
+        });
 
-        // 2. Fetch property descriptor shim to ensure window.fetch is writable and configurable
+        // Ensure window.fetch is writable for extensions/tools without altering Window.prototype
         try {
-          var origFetch = typeof window !== 'undefined' ? window.fetch : null;
-          if (origFetch) {
-            var boundFetch = origFetch.bind ? origFetch.bind(window) : origFetch;
-            try {
+          if (typeof window !== 'undefined' && window.fetch) {
+            var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+            if (desc && !desc.writable && desc.configurable) {
               Object.defineProperty(window, 'fetch', {
-                value: boundFetch,
+                value: window.fetch.bind(window),
                 writable: true,
                 configurable: true,
                 enumerable: true
               });
-            } catch (e1) {
-              try {
-                var _currentFetch = boundFetch;
-                Object.defineProperty(window, 'fetch', {
-                  get: function() { return _currentFetch; },
-                  set: function(v) { _currentFetch = v; },
-                  configurable: true,
-                  enumerable: true
-                });
-              } catch (e2) {}
-            }
-
-            if (typeof Window !== 'undefined' && Window.prototype) {
-              try {
-                Object.defineProperty(Window.prototype, 'fetch', {
-                  value: boundFetch,
-                  writable: true,
-                  configurable: true,
-                  enumerable: true
-                });
-              } catch (e3) {
-                try {
-                  var _protoFetch = boundFetch;
-                  Object.defineProperty(Window.prototype, 'fetch', {
-                    get: function() { return _protoFetch; },
-                    set: function(v) { _protoFetch = v; },
-                    configurable: true,
-                    enumerable: true
-                  });
-                } catch (e4) {}
-              }
             }
           }
-        } catch (err) {}
+        } catch (e) {}
       })();
     </script>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>MyLedgerBox - Nigerian Financial Management SaaS</title>
     <meta name="description" content="Nigerian-first financial management SaaS platform featuring business multi-tenancy, invoicing, quotations, receipts, expenses, customer tracking, and financial analytics in NGN." />
     <meta property="og:title" content="MyLedgerBox - Nigerian Financial Management SaaS" />
@@ -92,9 +71,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased font-sans selection:bg-emerald-500 selection:text-white min-h-screen">
+  <body class="bg-slate-50 text-slate-900 antialiased font-sans selection:bg-emerald-500 selection:text-white min-h-screen min-h-[100dvh]">
     <div id="root"></div>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

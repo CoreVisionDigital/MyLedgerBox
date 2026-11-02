@@ -14,6 +14,7 @@ import {
 import { useNotification } from './NotificationContext';
 
 import { SUPER_ADMIN_EMAIL } from '../types';
+import { safeStorage } from '../lib/storage';
 
 export interface AuthUserProfile {
   uid: string;
@@ -42,7 +43,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [demoUser, setDemoUser] = useState<AuthUserProfile | null>(() => {
-    const cached = localStorage.getItem('bizledger_demo_user');
+    const cached = safeStorage.getItem('bizledger_demo_user');
     if (cached) {
       try {
         return JSON.parse(cached);
@@ -63,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setFirebaseUser(currentUser);
       if (currentUser) {
         setDemoUser(null);
-        localStorage.removeItem('bizledger_demo_user');
+        safeStorage.removeItem('bizledger_demo_user');
       }
       setLoading(false);
     });
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           isSuperAdmin: true,
         };
         setDemoUser(fallbackProfile);
-        localStorage.setItem('bizledger_demo_user', JSON.stringify(fallbackProfile));
+        safeStorage.setItem('bizledger_demo_user', JSON.stringify(fallbackProfile));
         success('Super Admin Authenticated', `Signed in as Account Owner (${SUPER_ADMIN_EMAIL}).`);
         return;
       }
@@ -124,7 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           isSuperAdmin: isSuper,
         };
         setDemoUser(userProfile);
-        localStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
+        safeStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
         success('Signed In Successfully', `Welcome to MyLedgerBox, ${userProfile.displayName}!`);
         return;
       }
@@ -156,7 +157,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           isSuperAdmin: isSuper,
         };
         setDemoUser(userProfile);
-        localStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
+        safeStorage.setItem('bizledger_demo_user', JSON.stringify(userProfile));
         success('Account Created', `Welcome to MyLedgerBox, ${userProfile.displayName}!`);
         return;
       }
@@ -187,7 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isDemoUser: true,
     };
     setDemoUser(demoProfile);
-    localStorage.setItem('bizledger_demo_user', JSON.stringify(demoProfile));
+    safeStorage.setItem('bizledger_demo_user', JSON.stringify(demoProfile));
     info('Demo Account Active', 'Signed in as Nigerian business managing director for testing.');
   };
 
@@ -201,7 +202,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isSuperAdmin: true,
     };
     setDemoUser(superAdminProfile);
-    localStorage.setItem('bizledger_demo_user', JSON.stringify(superAdminProfile));
+    safeStorage.setItem('bizledger_demo_user', JSON.stringify(superAdminProfile));
     success('Super Admin Authenticated', `Signed in as Account Owner (${SUPER_ADMIN_EMAIL}). Full platform & subscriber management active.`);
   };
 
@@ -209,7 +210,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       if (demoUser) {
         setDemoUser(null);
-        localStorage.removeItem('bizledger_demo_user');
+        safeStorage.removeItem('bizledger_demo_user');
       }
       await fbSignOut(auth);
       success('Logged Out', 'You have been securely signed out.');
