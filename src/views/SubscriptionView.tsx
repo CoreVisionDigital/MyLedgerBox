@@ -27,8 +27,15 @@ import {
   RefreshCw,
   XCircle,
   HelpCircle,
-  Building2
+  Building2,
+  ExternalLink,
+  CheckCircle2
 } from 'lucide-react';
+import { 
+  isPaystackConfigured, 
+  isPaystackLiveMode, 
+  getMaskedPaystackKey 
+} from '../lib/paystack';
 
 export const SubscriptionView: React.FC = () => {
   const { 
@@ -120,6 +127,14 @@ export const SubscriptionView: React.FC = () => {
                   : 'Billed monthly'}
                 {sub?.currentPeriodEnd && ` • Cycle ends ${new Date(sub.currentPeriodEnd).toLocaleDateString('en-NG')}`}
               </p>
+              {sub?.lastPaymentReference && (
+                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 w-fit">
+                  <CreditCard className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    Settled via Paystack • Ref: <strong className="font-mono text-emerald-900">{sub.lastPaymentReference}</strong>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -286,6 +301,36 @@ export const SubscriptionView: React.FC = () => {
           </div>
         </div>
 
+        {/* Paystack Gateway Trust Banner */}
+        <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white rounded-2xl p-4 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">
+              ₦
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">Instant Paystack Gateway Active</span>
+                {isPaystackConfigured() ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    ● Connected ({getMaskedPaystackKey()})
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    ● Simulator Ready (Set VITE_PAYSTACK_PUBLIC_KEY in .env)
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-300 text-[11px] mt-0.5">
+                Instant activation via Verve, Mastercard, Visa, Direct Nigerian Bank Transfer & USSD. Zero manual reconciliation.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] text-slate-400 hidden lg:inline">Secured by Paystack (PCI-DSS Level 1)</span>
+          </div>
+        </div>
+
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {SUBSCRIPTION_PLANS.map(plan => {
@@ -367,8 +412,9 @@ export const SubscriptionView: React.FC = () => {
                       variant={plan.isPopular ? 'primary' : 'outline'}
                       className="w-full font-bold"
                       onClick={() => openUpgradeModal(`Upgrade to ${plan.name} (${billingInterval})`)}
+                      leftIcon={<CreditCard className="w-4 h-4" />}
                     >
-                      {plan.ctaLabel}
+                      {plan.id === 'enterprise' ? 'Pay & Activate Enterprise' : 'Pay with Paystack'}
                     </Button>
                   )}
                 </div>

@@ -21,8 +21,20 @@ import {
   Building2, 
   Zap, 
   ArrowRight,
-  Clock
+  Clock,
+  ExternalLink,
+  CheckCircle2,
+  FileCheck,
+  Download,
+  AlertCircle
 } from 'lucide-react';
+import { 
+  initializePaystackSubscriptionPayment, 
+  isPaystackConfigured, 
+  isPaystackLiveMode,
+  getMaskedPaystackKey,
+  generatePaystackReference
+} from '../../lib/paystack';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -45,7 +57,15 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('6months');
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer' | 'card'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [step, setStep] = useState<'select' | 'checkout'>('select');
+  const [step, setStep] = useState<'select' | 'checkout' | 'success'>('select');
+  const [paystackNotice, setPaystackNotice] = useState(false);
+  const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
+    reference: string;
+    amountMinor: number;
+    planName: string;
+    interval: string;
+    date: string;
+  } | null>(null);
 
   const currentPlanId = activeBusiness?.subscription?.planId || 'free';
   const isTrialing = activeBusiness?.subscription?.status === 'trialing';
@@ -53,6 +73,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   const selectedPlan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlanId) || SUBSCRIPTION_PLANS[1];
   const discountPercent = getDiscountPercent(selectedPlan, billingInterval);
+  const totalAmountMinor = getPlanPriceMinor(selectedPlan, billingInterval);
 
   const handleStartTrial = async () => {
     try {
@@ -64,13 +85,58 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     }
   };
 
-  const handleConfirmUpgrade = async () => {
+  const handleExecutePayment = async (referenceOverride?: string) => {
+    const reference = referenceOverride || generatePaystackReference('MLB_PAYSTACK');
     try {
       setIsProcessing(true);
-      await updateSubscription(selectedPlanId, billingInterval, paymentMethod);
-      onClose();
+      await updateSubscription(selectedPlanId, billingInterval, paymentMethod, {
+        reference,
+        amountMinor: totalAmountMinor,
+      });
+
+      setPaymentSuccessInfo({
+        reference,
+        amountMinor: totalAmountMinor,
+        planName: selectedPlan.name,
+        interval: billingInterval === 'annual' ? 'Annual (12 Months)' : billingInterval === '6months' ? 'Semi-Annual (6 Months)' : 'Monthly',
+        date: new Date().toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      });
+      setStep('success');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmUpgrade = async () => {
+    // If user chose Paystack or Card, attempt Paystack popup
+    if (paymentMethod === 'paystack' || paymentMethod === 'card') {
+      if (isPaystackConfigured()) {
+        try {
+          setIsProcessing(true);
+          await initializePaystackSubscriptionPayment({
+            email: activeBusiness?.email || 'director@enterprise.ng',
+            amountMinor: totalAmountMinor,
+            businessName: activeBusiness?.name || 'MyLedgerBox Subscriber',
+            planName: selectedPlan.name,
+            billingInterval,
+            onSuccess: (res) => {
+              handleExecutePayment(res.reference);
+            },
+            onClose: () => {
+              setIsProcessing(false);
+            },
+          });
+        } catch (err: any) {
+          setIsProcessing(false);
+          setPaystackNotice(true);
+        }
+      } else {
+        // If keys haven't been entered in .env yet, display setup guidance with instant simulator
+        setPaystackNotice(true);
+      }
+    } else {
+      // Direct Bank Transfer (NIBSS)
+      await handleExecutePayment(generatePaystackReference('MLB_NIP_TRANSFER'));
     }
   };
 
@@ -254,7 +320,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               </div>
             </div>
           </div>
-        ) : (
+        ) : step === 'checkout' ? (
           /* Step 2: Checkout Confirmation */
           <div className="space-y-5 text-xs">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
@@ -294,7 +360,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div
-                  onClick={() => setPaymentMethod('paystack')}
+                  onClick={() => { setPaymentMethod('paystack'); setPaystackNotice(false); }}
                   className={`p-3 rounded-xl border cursor-pointer text-center transition-all ${
                     paymentMethod === 'paystack'
                       ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold'
@@ -303,24 +369,11 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 >
                   <CreditCard className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
                   <span>Paystack Gateway</span>
-                  <span className="block text-[10px] text-slate-400 mt-0.5">Card / USSD / Bank</span>
+                  <span className="block text-[10px] text-slate-400 mt-0.5">Instant Card / USSD / NIP</span>
                 </div>
 
                 <div
-                  onClick={() => setPaymentMethod('bank_transfer')}
-                  className={`p-3 rounded-xl border cursor-pointer text-center transition-all ${
-                    paymentMethod === 'bank_transfer'
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold'
-                      : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
-                  <span>NIBSS Direct NIP</span>
-                  <span className="block text-[10px] text-slate-400 mt-0.5">Instant Transfer</span>
-                </div>
-
-                <div
-                  onClick={() => setPaymentMethod('card')}
+                  onClick={() => { setPaymentMethod('card'); setPaystackNotice(false); }}
                   className={`p-3 rounded-xl border cursor-pointer text-center transition-all ${
                     paymentMethod === 'card'
                       ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold'
@@ -331,8 +384,95 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   <span>Debit Card</span>
                   <span className="block text-[10px] text-slate-400 mt-0.5">Verve / Mastercard / Visa</span>
                 </div>
+
+                <div
+                  onClick={() => { setPaymentMethod('bank_transfer'); setPaystackNotice(false); }}
+                  className={`p-3 rounded-xl border cursor-pointer text-center transition-all ${
+                    paymentMethod === 'bank_transfer'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold'
+                      : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
+                  <span>NIBSS Direct NIP</span>
+                  <span className="block text-[10px] text-slate-400 mt-0.5">Manual Bank Transfer</span>
+                </div>
               </div>
             </div>
+
+            {/* Paystack Gateway Highlights */}
+            {(paymentMethod === 'paystack' || paymentMethod === 'card') && (
+              <div className="p-3.5 bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                    ₦
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      Paystack Instant Payment
+                      {isPaystackConfigured() ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                          {isPaystackLiveMode() ? 'Live Mode' : 'Test Mode'} ({getMaskedPaystackKey()})
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                          Simulator Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-300">
+                      Verve, Mastercard, Visa, Direct NIP Transfer & USSD
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-emerald-400">
+                  {formatNaira(totalAmountMinor)}
+                </span>
+              </div>
+            )}
+
+            {/* Paystack Key Setup Notice */}
+            {paystackNotice && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-amber-900">
+                      Paystack Public Key Required
+                    </h4>
+                    <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                      To connect your Paystack account and open the live payment modal, please add your Paystack Public Key to your <strong>.env</strong> file:
+                    </p>
+                    <div className="mt-2 p-2 bg-slate-900 text-emerald-400 font-mono text-[11px] rounded-lg border border-slate-800 select-all">
+                      VITE_PAYSTACK_PUBLIC_KEY="pk_test_xxxxxxxxxxxxxxxxxxxxxxxx"
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1.5">
+                      You can also simulate instant Paystack payment now to test the complete subscription workflow.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1 justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaystackNotice(false)}
+                    className="text-xs"
+                  >
+                    I'll add the key
+                  </Button>
+                  <Button
+                    variant="emerald"
+                    size="sm"
+                    onClick={() => handleExecutePayment(generatePaystackReference('MLB_PAYSTACK_SIM'))}
+                    isLoading={isProcessing}
+                    leftIcon={<Zap className="w-3.5 h-3.5" />}
+                    className="text-xs font-bold"
+                  >
+                    Simulate Instant Paystack Payment
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Nigerian Tax & Cancellation Policy */}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-slate-600 text-[11px]">
@@ -354,8 +494,67 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 variant="primary"
                 onClick={handleConfirmUpgrade}
                 isLoading={isProcessing}
+                leftIcon={<CreditCard className="w-4 h-4" />}
               >
-                Confirm & Activate {selectedPlan.name}
+                {paymentMethod === 'paystack' || paymentMethod === 'card'
+                  ? `Pay with Paystack (${formatNaira(totalAmountMinor)})`
+                  : `Confirm & Activate ${selectedPlan.name}`}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Step 3: Instant Payment Success Confirmation */
+          <div className="py-4 space-y-5 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md shadow-emerald-900/10 border-2 border-emerald-300">
+              <CheckCircle2 className="w-9 h-9" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Payment Confirmed
+              </span>
+              <h3 className="text-xl font-extrabold text-slate-900 mt-2">
+                Instant Subscription Activated!
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Your payment was successfully processed via Paystack. Your business now has full access to the {paymentSuccessInfo?.planName} tier.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
+              <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                <span className="text-slate-500">Plan & Billing</span>
+                <span className="font-bold text-slate-900">{paymentSuccessInfo?.planName} ({paymentSuccessInfo?.interval})</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                <span className="text-slate-500">Amount Paid</span>
+                <span className="font-bold font-mono text-emerald-700">{formatNaira(paymentSuccessInfo?.amountMinor || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                <span className="text-slate-500">Payment Gateway</span>
+                <span className="font-semibold text-slate-800">Paystack Instant (NGN)</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                <span className="text-slate-500">Transaction Reference</span>
+                <span className="font-mono text-[11px] text-slate-700 select-all">{paymentSuccessInfo?.reference}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-500">Payment Date</span>
+                <span className="text-slate-700">{paymentSuccessInfo?.date}</span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <Button
+                variant="emerald"
+                size="lg"
+                className="w-full font-bold shadow-md shadow-emerald-950/10"
+                onClick={() => {
+                  onClose();
+                  setStep('select');
+                }}
+              >
+                Go to Dashboard
               </Button>
             </div>
           </div>

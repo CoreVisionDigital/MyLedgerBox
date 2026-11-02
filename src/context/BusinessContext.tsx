@@ -147,7 +147,16 @@ interface BusinessContextType {
   
   // Subscription & Pricing Strategy
   startProTrialSubscription: () => Promise<void>;
-  updateSubscription: (planId: SubscriptionPlanId, interval: BillingInterval, paymentMethod?: 'paystack' | 'bank_transfer' | 'card') => Promise<void>;
+  updateSubscription: (
+    planId: SubscriptionPlanId, 
+    interval: BillingInterval, 
+    paymentMethod?: 'paystack' | 'bank_transfer' | 'card',
+    paymentDetails?: {
+      reference?: string;
+      amountMinor?: number;
+      paystackCustomerCode?: string;
+    }
+  ) => Promise<void>;
   cancelSubscription: (reason?: string) => Promise<void>;
   resumeSubscription: () => Promise<void>;
   isUpgradeModalOpen: boolean;
@@ -849,7 +858,12 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const updateSubscription = async (
     planId: SubscriptionPlanId,
     interval: BillingInterval,
-    paymentMethod: 'paystack' | 'bank_transfer' | 'card' = 'paystack'
+    paymentMethod: 'paystack' | 'bank_transfer' | 'card' = 'paystack',
+    paymentDetails?: {
+      reference?: string;
+      amountMinor?: number;
+      paystackCustomerCode?: string;
+    }
   ) => {
     if (!activeBusiness) return;
     const now = new Date();
@@ -871,10 +885,17 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       cancelAtPeriodEnd: false,
       autoRenew: true,
       paymentMethod,
+      lastPaymentReference: paymentDetails?.reference,
+      lastPaymentAmountMinor: paymentDetails?.amountMinor,
+      lastPaymentDate: paymentDetails?.reference ? now.toISOString() : undefined,
+      paystackCustomerCode: paymentDetails?.paystackCustomerCode,
     };
 
     await updateBusiness(activeBusiness.id, { subscription: newSub });
-    await logAuditAction('business', activeBusiness.id, 'update', `Upgraded subscription to ${planId.toUpperCase()} (${interval})`);
+    const auditMsg = paymentDetails?.reference
+      ? `Subscribed to ${planId.toUpperCase()} (${interval}) via Paystack. Ref: ${paymentDetails.reference}`
+      : `Upgraded subscription to ${planId.toUpperCase()} (${interval})`;
+    await logAuditAction('business', activeBusiness.id, 'update', auditMsg);
     success('Subscription Activated', `Your business is now subscribed to the ${planId.toUpperCase()} tier.`);
   };
 

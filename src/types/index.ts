@@ -39,6 +39,10 @@ export interface BusinessSubscription {
   assignedBySuperAdmin?: boolean;
   customInvoiceLimit?: number;
   customCustomerLimit?: number;
+  lastPaymentReference?: string;
+  lastPaymentAmountMinor?: number;
+  lastPaymentDate?: string;
+  paystackCustomerCode?: string;
   notes?: string;
 }
 

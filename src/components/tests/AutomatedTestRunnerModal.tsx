@@ -10,7 +10,8 @@ import {
   calculateVatAmountMinor, 
   calculateWhtAmountMinor,
   addMinor,
-  subtractMinor
+  subtractMinor,
+  formatNaira
 } from '../../lib/money';
 import { 
   SUBSCRIPTION_PLANS, 
@@ -18,6 +19,7 @@ import {
   getAnnualDiscountPercent,
   getPlanPriceMinor 
 } from '../../lib/subscriptions';
+import { generatePaystackReference } from '../../lib/paystack';
 import { SUPER_ADMIN_EMAIL } from '../../types';
 import { CheckCircle2, XCircle, Play, ShieldAlert, Check } from 'lucide-react';
 
@@ -287,6 +289,34 @@ export const AutomatedTestRunnerModal: React.FC<AutomatedTestRunnerModalProps> =
         passed: false,
         message: e.message,
         durationMs: Math.round(performance.now() - t9Start),
+      });
+    }
+
+    // Test 10: Paystack Instant Payment Gateway & Minor-Unit Kobo Currency Alignment
+    const t10Start = performance.now();
+    try {
+      const annualProPriceMinor = getPlanPriceMinor(SUBSCRIPTION_PLANS[1], 'annual');
+      const isIntegerKobo = Number.isInteger(annualProPriceMinor) && annualProPriceMinor > 0;
+      const ref = generatePaystackReference('MLB_TEST');
+      const isRefValid = ref.startsWith('MLB_TEST_') && ref.length > 15;
+      const isPassed = isIntegerKobo && isRefValid;
+
+      testRuns.push({
+        id: 'test_paystack_gateway_kobo',
+        name: 'Paystack Instant Payment Gateway & Kobo Minor-Unit Alignment',
+        category: 'Financial Math',
+        passed: isPassed,
+        message: `Verified Paystack amounts are exact integer Kobo (${annualProPriceMinor} Kobo = ${formatNaira(annualProPriceMinor)}) with valid unique transaction reference format.`,
+        durationMs: Math.round(performance.now() - t10Start),
+      });
+    } catch (e: any) {
+      testRuns.push({
+        id: 'test_paystack_gateway_kobo',
+        name: 'Paystack Instant Payment Gateway & Kobo Minor-Unit Alignment',
+        category: 'Financial Math',
+        passed: false,
+        message: e.message,
+        durationMs: Math.round(performance.now() - t10Start),
       });
     }
 

@@ -10,8 +10,16 @@ import {
   Settings2, 
   Plus, 
   Users, 
-  CheckCircle2 
+  CheckCircle2,
+  Zap,
+  ExternalLink,
+  Lock
 } from 'lucide-react';
+import { 
+  isPaystackConfigured, 
+  isPaystackLiveMode, 
+  getMaskedPaystackKey 
+} from '../lib/paystack';
 
 export const SettingsView: React.FC = () => {
   const { activeBusiness, allBusinesses, switchBusiness, members } = useBusiness();
@@ -110,6 +118,60 @@ export const SettingsView: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1">
               Account Name: {activeBusiness?.bankDetails?.accountName || activeBusiness?.name}
             </p>
+          </div>
+        </div>
+
+        {/* Paystack Payment Gateway Integration Card */}
+        <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 text-white space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                ₦
+              </div>
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Subscriber Payment Gateway: Paystack
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  Instant subscription collection via Card, Bank Transfer (NUBAN) & USSD
+                </p>
+              </div>
+            </div>
+
+            {isPaystackConfigured() ? (
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {isPaystackLiveMode() ? 'Live Mode' : 'Test Mode'} ({getMaskedPaystackKey()})
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Key Pending in .env
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+            <div>
+              <span className="text-[11px] text-slate-400 block">Currency & Minor Unit Precision</span>
+              <span className="font-semibold text-slate-200 mt-0.5 block">Nigerian Naira (100 Kobo = ₦1)</span>
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-400 block">Accepted Payment Channels</span>
+              <span className="font-semibold text-emerald-400 mt-0.5 block">Verve, Mastercard, Visa, NIP, USSD</span>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-slate-400 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex items-start gap-2">
+            <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <span>To connect your Paystack keys, specify in your </span>
+              <strong className="text-slate-200 font-mono">.env</strong>
+              <span> file: </span>
+              <code className="text-emerald-300 font-mono bg-slate-950 px-1 py-0.5 rounded text-[10px]">
+                VITE_PAYSTACK_PUBLIC_KEY="pk_live_..."
+              </code>
+            </div>
           </div>
         </div>
 
