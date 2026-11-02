@@ -7,8 +7,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    // Relative base ensures asset URLs (./assets/...) load under GitHub Pages repository subpaths
-    base: './',
+    // Use root base for Cloud Run & dev server; support relative base for GitHub Pages
+    base: process.env.GITHUB_PAGES ? './' : '/',
     plugins: [
       react(), 
       tailwindcss(),

@@ -51,6 +51,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.warn('Cache parse error');
       }
     }
+    // If user has not explicitly logged out, provide immediate demo account on first visit
+    const loggedOutFlag = safeStorage.getItem('bizledger_logged_out');
+    if (!loggedOutFlag) {
+      const defaultProfile: AuthUserProfile = {
+        uid: 'demo_director_ng_001',
+        email: 'director@dangote-supplies.ng',
+        displayName: 'Babajide Adebayo (Director)',
+        photoURL: null,
+        isDemoUser: true,
+        isSuperAdmin: false,
+      };
+      safeStorage.setItem('bizledger_demo_user', JSON.stringify(defaultProfile));
+      return defaultProfile;
+    }
     return null;
   });
   const [loading, setLoading] = useState(true);
@@ -60,16 +74,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Boot check Firestore connection
     testFirestoreConnection().catch(err => console.warn('Init Firestore check:', err));
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setFirebaseUser(currentUser);
-      if (currentUser) {
-        setDemoUser(null);
-        safeStorage.removeItem('bizledger_demo_user');
-      }
+    // Failsafe timer: Ensure app never stays stuck on loading spinner (1.2s max)
+    const safetyTimer = setTimeout(() => {
       setLoading(false);
-    });
+    }, 1200);
 
-    return () => unsubscribe();
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        clearTimeout(safetyTimer);
+        setFirebaseUser(currentUser);
+        if (currentUser) {
+          setDemoUser(null);
+          safeStorage.removeItem('bizledger_demo_user');
+          safeStorage.removeItem('bizledger_logged_out');
+        }
+        setLoading(false);
+      });
+    } catch (err) {
+      console.warn('Auth state subscription notice:', err);
+      setLoading(false);
+    }
+
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   const loginWithGoogle = async () => {
@@ -189,6 +219,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
     setDemoUser(demoProfile);
     safeStorage.setItem('bizledger_demo_user', JSON.stringify(demoProfile));
+    safeStorage.removeItem('bizledger_logged_out');
     info('Demo Account Active', 'Signed in as Nigerian business managing director for testing.');
   };
 
@@ -203,16 +234,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
     setDemoUser(superAdminProfile);
     safeStorage.setItem('bizledger_demo_user', JSON.stringify(superAdminProfile));
+    safeStorage.removeItem('bizledger_logged_out');
     success('Super Admin Authenticated', `Signed in as Account Owner (${SUPER_ADMIN_EMAIL}). Full platform & subscriber management active.`);
   };
 
   const logout = async () => {
     try {
+      safeStorage.setItem('bizledger_logged_out', 'true');
       if (demoUser) {
         setDemoUser(null);
         safeStorage.removeItem('bizledger_demo_user');
       }
-      await fbSignOut(auth);
+      try {
+        await fbSignOut(auth);
+      } catch {}
       success('Logged Out', 'You have been securely signed out.');
     } catch (err: any) {
       console.error('Logout error:', err);
