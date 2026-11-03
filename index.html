@@ -3,9 +3,9 @@
   <head>
     <script>
       (function() {
-        // Suppress unhandled exceptions originating from 3rd-party browser extensions or tracking blockers
+        // Suppress unhandled exceptions originating strictly from 3rd-party browser extensions
         var isExtensionOrExternalError = function(msg, src) {
-          if (typeof src === 'string' && (
+          if (typeof src === 'string' && src.length > 0 && (
             src.indexOf('chrome-extension://') !== -1 ||
             src.indexOf('moz-extension://') !== -1 ||
             src.indexOf('safari-extension://') !== -1 ||
@@ -14,9 +14,7 @@
             return true;
           }
           if (typeof msg === 'string' && (
-            msg.indexOf('Cannot set property fetch') !== -1 ||
-            msg.indexOf('ResizeObserver loop') !== -1 ||
-            msg.indexOf('Script error') !== -1
+            msg.indexOf('ResizeObserver loop') !== -1
           )) {
             return true;
           }

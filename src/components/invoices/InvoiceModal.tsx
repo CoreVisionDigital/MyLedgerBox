@@ -6,7 +6,8 @@ import { Select } from '../common/Select';
 import { useBusiness } from '../../context/BusinessContext';
 import { useNotification } from '../../context/NotificationContext';
 import { formatNaira, nairaToKobo, calculateLineTotalMinor, addMinor, subtractMinor } from '../../lib/money';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { generateInvoiceLineItems } from '../../lib/gemini';
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -39,6 +40,36 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose }) =
   const [items, setItems] = useState<TempLineItem[]>([
     { description: '', quantity: 1, unitPriceNaira: '', discountPercent: 0 },
   ]);
+  const [isGeneratingAiItems, setIsGeneratingAiItems] = useState(false);
+
+  const handleAiSuggestItems = async () => {
+    const cust = customers.find(c => c.id === customerId);
+    setIsGeneratingAiItems(true);
+    try {
+      const res = await generateInvoiceLineItems(
+        cust?.name || 'Commercial Client',
+        activeBusiness?.industry || 'Commercial Services',
+        notes || 'Supplies and deliverables'
+      );
+      if (res.error) {
+        error('AI Assist', res.error);
+        return;
+      }
+      if (res.items && res.items.length > 0) {
+        const newItems: TempLineItem[] = res.items.map(it => ({
+          description: it.description,
+          quantity: it.quantity || 1,
+          unitPriceNaira: ((it.unitPriceMinor || 5000000) / 100).toString(),
+          discountPercent: 0,
+        }));
+        setItems(newItems);
+      }
+    } catch (e: any) {
+      error('AI Assist', e?.message || 'Failed to suggest items');
+    } finally {
+      setIsGeneratingAiItems(false);
+    }
+  };
 
   useEffect(() => {
     if (activeBusiness) {
@@ -220,15 +251,29 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose }) =
         <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Line Items</h4>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddItem}
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
-            >
-              Add Item
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAiSuggestItems}
+                disabled={isGeneratingAiItems}
+                isLoading={isGeneratingAiItems}
+                leftIcon={<Sparkles className="w-3.5 h-3.5 text-emerald-600" />}
+                className="text-xs font-semibold text-emerald-800 bg-emerald-50/60 border-emerald-200 hover:bg-emerald-100"
+              >
+                AI Suggest Items
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddItem}
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+              >
+                Add Item
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-3">

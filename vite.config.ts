@@ -7,8 +7,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    // Use root base for Cloud Run & dev server; support relative base for GitHub Pages
-    base: process.env.GITHUB_PAGES ? './' : '/',
+    // Use relative base for universal compatibility across all hosting providers (Vercel, Netlify, GitHub Pages, Cloudflare, S3)
+    base: './',
     plugins: [
       react(), 
       tailwindcss(),

@@ -18,6 +18,7 @@ import { SuperAdminSubscribersView } from './views/SuperAdminSubscribersView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { SettingsView } from './views/SettingsView';
 import { AuthView } from './views/AuthView';
+import { AiAdvisorView } from './views/AiAdvisorView';
 
 // Components & Modals
 import { SubscriptionStatusBanner } from './components/subscription/SubscriptionStatusBanner';
@@ -119,6 +120,10 @@ function AuthenticatedApp() {
                   }}
                   onNewExpense={() => setIsExpenseModalOpen(true)}
                 />
+              )}
+
+              {currentTab === 'ai_advisor' && (
+                <AiAdvisorView />
               )}
 
               {currentTab === 'subscribers' && (

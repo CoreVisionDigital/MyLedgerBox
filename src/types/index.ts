@@ -51,6 +51,7 @@ export interface Business {
   name: string;
   rcNumber?: string; // CAC Registration number
   taxIdentificationNumber?: string; // FIRS TIN
+  industry?: string; // e.g. "Oil & Gas", "Information Technology", "Logistics"
   email: string;
   phone: string;
   address: string;

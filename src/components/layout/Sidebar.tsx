@@ -14,13 +14,15 @@ import {
   Building2,
   ChevronDown,
   Zap,
-  Crown
+  Crown,
+  Sparkles
 } from 'lucide-react';
 import { useBusiness } from '../../context/BusinessContext';
 import { SUPER_ADMIN_EMAIL } from '../../types';
 
 export type NavItemKey =
   | 'dashboard'
+  | 'ai_advisor'
   | 'subscribers'
   | 'invoices'
   | 'quotations'
@@ -57,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { key: 'dashboard' as NavItemKey, label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'ai_advisor' as NavItemKey, label: 'AI Financial Advisor', icon: Sparkles, badge: 'Gemini' },
     { key: 'subscribers' as NavItemKey, label: 'Subscribers Portal', icon: Crown, badge: 'Super Admin', isSuperAdminItem: true },
     { key: 'invoices' as NavItemKey, label: 'Invoices', icon: FileText },
     { key: 'quotations' as NavItemKey, label: 'Quotations & Quotes', icon: FileText },

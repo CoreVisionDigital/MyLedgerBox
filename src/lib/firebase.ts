@@ -158,20 +158,25 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Test initial connection to Firestore as mandated by skill with timeout guard
 export async function testFirestoreConnection(): Promise<boolean> {
-  if (!isFirebaseAvailable || !db || typeof (db as any).type === 'undefined' && Object.keys(db).length === 0) {
+  if (!isFirebaseAvailable || !db) {
     return false;
   }
   try {
+    let testDocRef;
+    try {
+      testDocRef = doc(db, 'test', 'connection');
+    } catch {
+      return false;
+    }
     const timeout = new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('timeout')), 2500)
     );
     await Promise.race([
-      getDocFromServer(doc(db, 'test', 'connection')),
+      getDocFromServer(testDocRef),
       timeout
     ]);
     return true;
   } catch (error) {
-    // Expected to get permission denied or doc not found, but it verifies server connectivity
     if (error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('timeout'))) {
       return false;
     }
